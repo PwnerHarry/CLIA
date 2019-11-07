@@ -2,6 +2,7 @@ function [Z, SVM] = incremental_learn(Z, active_clusters_index, index_inactive_c
 global MAX_REFERENCE_NUM_FLAG MAX_ARCHIVE_SIZE disable_flag normalization_str delta learning_initial_flag;
 if learning_initial_flag == true
     learning_initial_flag = false;
+    MAX_ARCHIVE_SIZE = ceil(0.33 * Global.M * Global.N);
 end
 if disable_flag && numel(frontiers) > 0.9 * MAX_ARCHIVE_SIZE || numel(active_clusters_index) > 0.95 * Global.N && size(Z, 1) == Global.N
     return;
@@ -32,6 +33,8 @@ elseif numel(active_clusters_index) < 0.95 * Global.N
         end
     elseif size(Z, 1) > 2 * Global.N
         picked_frontiers = crowding_pick(frontiers, 2 *  Global.N, 'precise');
+        [~, allocation] = pair([frontiers.objs], Z, 'sin');
+        index_inactive_clusters = setdiff(1: size(Z, 1), unique(allocation));
         P = truncate([picked_frontiers.objs]); N = truncate(Z(index_inactive_clusters, :));
         if size(P, 1) > 0 && size(N, 1) > 0
             [~, y_active] = predict(P, SVM); p_index = find(y_active == 1);
